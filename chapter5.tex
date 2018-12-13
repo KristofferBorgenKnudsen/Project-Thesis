@@ -1,18 +1,18 @@
-\chapter{Results}
+\chapter{Simulation results}
 As discussed in chapter \ref{chap:method} the PD algorithm was initially tuned to make sure that the states ($\phi, \theta, z$) were stable on their own. This was done by giving the vehicle a fixed thrust in the $x$ direction, which resulted in the following proportional and derivative gains
 \begin{align}
     K_{p} & = 1 \\
     K_{d} & = 0.1
 \end{align}
-In order to sufficiently train the DDPG algorithm the simulation was executed over $N = 400$ episodes, where each episode consisted of $t = [1, T=1000]$ steps. For each episode the algorithm will therefore be executed until T = 1000 \mathbf{or} the BlueROV2 reaches the terminal state, indicating the it has reached the desired position and orientation. The reward discount factor $\gamma$, learning rate for the actor network $\alpha_{a}$, learning rate for the critic network $\alpha_{q}$ and the exploitation/exploration factor $\epsilon$ were initially defined as
+In order to sufficiently train the DDPG algorithm the simulation was executed over $N = 400$ episodes, where each episode consisted of $t = [1, T=1000]$ steps. For each episode the algorithm will therefore be executed until T = 1000 \textbf{or} the BlueROV2 reaches the terminal state, indicating the it has reached the desired pose. The reward discount factor ($\gamma$), learning rate for the actor network ($\alpha_{a}$), learning rate for the critic network ($\alpha_{q}$) and the exploitation/exploration factor ($\epsilon$) were initially defined as
 \begin{align}
     \gamma & = 0.9 \\
     \alha_{a} & = 1e-4 \\
     \alpha_{q} & = 1e-4 \\
     \epsilon & = 1
 \end{align}
-Recall $\alpha_{a}, \alpha_{q}$ and $\epsilon$ should all decrease over the number of iteration, since the algorithm gains larger and larger knowledge about the environment. This was by discounting the parameters at each episode, $N$.\\\\
-To accomplish Station Keeping the desired positions and orientations were defined as
+Recall $\alpha_{a}, \alpha_{q}$ and $\epsilon$ should all decrease over the number of iteration, since the algorithm gains larger and larger knowledge about the environment. This was by discounting the parameters at each episode, $N_{i}$ $(i = 1,...,400)$.\\\\
+To accomplish Station Keeping the desired pose were defined as
 \begin{align}
     s_{d} & = [x_{d}, y_{d}, \psi_{d}] = [1, 1, 0] \\
     s_{d,PD} & = [z_{d}, \phi_{d}, \theta_{d}] = [0, 0, 0]

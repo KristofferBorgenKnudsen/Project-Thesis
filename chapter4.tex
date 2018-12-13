@@ -1,5 +1,5 @@
 \chapter{Modeling} \label{chap:modeling}
-The simulations will be conducted using the \textbf{BlueROV2} by \textit{BlueRobitcs} \cite{blue}. The BlueROV2 has a 6-thruster vectored configuration, open-source electronics and software, and works well for inspections, research, and adventuring. The simulation model does not include the BlueROVs' tether, which connects the vehicle to i.e a surface vessel, which means that the vehicle is modelled as an AUV. 
+In order to evaluate the possibilities of applying Reinforcement Learning in AUV control simulations will be conducted using the \textbf{BlueROV2} by \textit{BlueRobitcs} \cite{blue}. The BlueROV2 has a 6-thruster vectored configuration, open-source electronics and software, and works well for inspections, research, and adventuring. The simulation model does not include the BlueROVs' tether, which connects the vehicle to i.e a surface vessel, which means that the vehicle is \textit{assumed to perform as an AUV in simulation}. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{images/chap4/bluerov2.png}
@@ -19,12 +19,23 @@ In figure \ref{fig:reference_frame} the BlueROV2s' 6 degrees of freedom (DOFs) i
     \item \textit{Body} is defined as a coordinate system $\{b\} = (x_{b},y_{b},z_{b})$ with origin $o_{b}$ centred at the vessels centre of mass, and moving with the body. Here, the $x_{b}$ axis is directed from aft to fore, the $y_{b}$ transverse axis is directed towards starboard and the $z_{b}$ normal axis directed from top to bottom. 
 \end{itemize}
 The notations in figure \ref{fig:reference_frame} are defined according to SNAME (1950) \cite{Fossen}, which is given in figure \ref{fig:sname}. The SNAME notation will be used throughout this paper. 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{images/chap4/SNAME.png}
     \caption{The notation of SNAME (1950) for marine vessels}
     \label{fig:sname}
 \end{figure}
+When dealing with multiple frames it is necessary to \textit{transform} between them, such that any parameter can be expressed in all frames. This is done through a \textit{transformation matrix}. For the BlueROV2 the linear and angular velocities, given in figure \ref{fig:sname}, are defined in the (Body) reference frame. From \textit{Fossen} \cite{Fossen} the \textit{Euler angles}, roll ($\phi$), pitch ($\theta$) and yaw ($\psi$), can be used to decompose the velocity vector $\textbf{v}_{b/n}^{b}$ in the (NED) reference frame. This is given by
+\begin{equation}
+    \mathbf{v}_{b/n}^{n} = \mathbf{R}_{b}^{n}(\Theta_{nb})\mathbf{v}_{b/n}^{b}
+\end{equation}
+where the rotation matrix from (Body) to (NED) is given by
+\begin{equation}
+    \mathbf{R}_{b}^{n}(\Theta_{nb}) = \begin{bmatrix}
+    c\psi c\theta & -s\psi c \phi + c\phi s\theta s\phi & s\psi s\phi + c\psi c\phi s\theta \\ s\psi c\theta & c\phi c\phi + s\phi s\theta s\psi & -c\psi s\phi + s\theta s\psi c\phi \\ -s\theta & c\theta s\phi & c\theta c\phi 
+    \end{bmatrix}
+\end{equation}
+where $c=cos$ and $s=sin$.
 \section{Dynamic Model of Underwater Vehicles}
 From \textit{Fossen} \cite{Fossen} the underwater dynamic equation of motions can be expressed as
 \begin{align}
@@ -32,9 +43,9 @@ From \textit{Fossen} \cite{Fossen} the underwater dynamic equation of motions ca
     \longrightarrow (M_{RB}+M_{A})\Dot{v}+(C_{RB}(v)+C_{A}(v))v+(D_{L}+D_{Q})v + g(\mu)+\delta & = \tau 
     \label{eq:motion}
 \end{align}
-For simplicity the external forces, in example environmental forces $\tau_{env}$, are here neglected. $\tau$ is therefore the forced applied by the controller, while $\delta$ is a model uncertainty vector. The terms in equation \ref{eq:motion} are defined in the following sections.
+For simplicity the external forces, in example environmental forces $\tau_{env}$, are here neglected. $\tau$ is therefore the forced applied by the controller, while $\delta$ is a model uncertainty vector. The terms in equation \ref{eq:motion} are defined in the following sections, and their values are given in Appendix A. 
 \subsection{Mass matrix}
-The Mass matrix consist of the rigid-body terms and the hydrodynamic mass terms. The hydrodynamic terms are due to \textit{added mass}, which is mass created by the acceleration of the surrounding water when a vehicle is moving through a stationary fluid \cite{Fossen}. 
+The Mass matrix consist of \textit{rigid-body} terms and \textit{hydrodynamic} terms. The hydrodynamic terms are due to \textit{added mass}, which is mass created by the acceleration of the surrounding water when a vehicle is moving through a stationary fluid \cite{Fossen}. 
 \begin{align}
     \textbf{M}_{RB} & = \begin{bmatrix}
                 m*I_{3x3} & 0_{3x3}\\
@@ -54,7 +65,7 @@ The Mass matrix consist of the rigid-body terms and the hydrodynamic mass terms.
                 N_{\Dot{u}} & N_{\Dot{v}} & N_{\Dot{\omega}} & N_{\Dot{p}} & N_{\Dot{q}} & N_{\Dot{r}} \\
                 \end{bmatrix} \\
 \end{align}
-where \textbf{m} denotes the total mass of the ROV, and \textbf{I$_{x}$, I$_{y}$, I$_{z}$} represents the moment of inertia about the body axis. Because of symmetry the products of inertia, here represented on the off-diagonal, will have the form \textbf{I$_{xy}$} = \textbf{I$_{yx}$}, \textbf{I$_{yz}$} = \textbf{I$_{zy}$} and \textbf{I$_{zx}$} = \textbf{I$_{xz}$}. The added mass matrix consist of hydrodynamic derivatives, which is given by
+where \textbf{m} denotes the total mass of the vehicle, and \textbf{I$_{x}$, I$_{y}$, I$_{z}$} represents the moment of inertia about the body axis. Because of symmetry, the products of inertia, here represented on the off-diagonal, will have the form \textbf{I$_{xy}$} = \textbf{I$_{yx}$}, \textbf{I$_{yz}$} = \textbf{I$_{zy}$} and \textbf{I$_{zx}$} = \textbf{I$_{xz}$}. The added mass matrix consist of hydrodynamic derivatives, which is given by
 \begin{equation}
 N_{\Dot{k}} = \frac{\partial N}{\partial \Dot{k}}
 \end{equation}
@@ -108,7 +119,7 @@ As stated previously the environmental forces are neglected in equation \ref{eq:
                 \end{bmatrix}|\mathbf{v}| \\
 \end{align}
 \subsection{Hydrostatic terms}
-The hydrostatic matrix, $g(\mu)$, accounts for the restoring forces, which is defined as the relationship between weight, W, and buoyancy, B. By assuming that the vehicle is neutrally buoyant it will satisfy $W = B$, and by further assuming that the \textit{centre of gravity} (COG) and the \textit{centre of buoyancy} (COB) are located vertically on the $z$ axis, the hydrostatic matrix can be defined as in \cite{Fossen}
+The hydrostatic matrix, expressed as $g(\mu)$ in equation \ref{eq:motion}, accounts for the \textit{restoring forces}, which is defined as the relationship between weight, W, and buoyancy, B. By assuming that the vehicle is \textit{neutrally buoyant} it will satisfy $W = B$, and by further assuming that the \textit{centre of gravity} (COG) and the \textit{centre of buoyancy} (COB) are located vertically on the $z$ axis, the hydrostatic matrix can be defined as in \cite{Fossen}
 \begin{equation}
     g(\mu) = [0, 0, 0, \Bar{BG}_{z} W cos(\phi)sin(\phi), \Bar{BG}_{z} W sin(\theta), 0]^{T}
 \end{equation}
@@ -122,7 +133,7 @@ The \textbf{BlueROV2} has 13 states, which are defined hereafter as
     \item 3 \textit{linear velocity} states defined in the (Body) frame as [$u$, $v$, $w$]
     \item 3 \textit{angular velocity} states defined in the (Body) frame as [$p$, $q$, $r$]
 \end{itemize}
-The orientation states are defined as \textit{quaternions} in order to resolve the issue connected to singularity in $\theta = \pm 90 \deg$ when using \textit{Euler angles}. However, when we are to use these states in the controller we need to transform them into Euler angles. The singularity wont be an issue when doing this, since the transformation don't affect the model. From (eq. 2.58) in Fossen \cite{Fossen} we have that the rotation matrix from (BODY) to (NED) for the quaternions is defined as
+The orientation states are defined as \textit{quaternions} in order to resolve the issue connected to singularity in $\theta = \pm 90 \deg$ when using \textit{Euler angles}. However, in order for the controller to use these states they need to be transformed into Euler angles. The singularity wont be an issue when doing this, since the transformation don't affect the model measurements. From (eq. 2.58) in Fossen \cite{Fossen} it is given that the \textit{rotation matrix} from (BODY) to (NED) for the quaternions is defined as
 \begin{equation}
     \mathbf{R}_{b}^{n}(\mathbf{q}) = 
     \begin{bmatrix}
@@ -131,11 +142,11 @@ The orientation states are defined as \textit{quaternions} in order to resolve t
     2(\epsilon_{1}\epsilon_{3}-\epsilon_{2}\eta) & 2(\epsilon_{2}\epsilon_{3}+\epsilon_{1}\eta) & 1 - 2(\epsilon_{1}^{2}+\epsilon_{2}^{2})
     \end{bmatrix}
 \end{equation}
-Furthermore we have from (eq. 2.76) in that 
+Furthermore, from (eq. 2.76) it is given that
 \begin{equation}
     \mathbf{R}_{b}^{n}(\Theta_{nb}) := \mathbf{R}_{b}^{n}(\mathbf{q})
 \end{equation}
-which gives us that the relationship between the Euler angles, $\phi$, $\theta$ and $\psi$, and the quaternions can be defined as
+which gives the relationship between the Euler angles, $\phi$, $\theta$ and $\psi$, and the quaternions defined as 
 \begin{equation}
     \begin{bmatrix}
     c\psi c\theta & -s\psi c \phi + c\phi s\theta s\phi & s\psi s\phi + c\psi c\phi s\theta \\ s\psi c\theta & c\phi c\phi + s\phi s\theta s\psi & -c\psi s\phi + s\theta s\psi c\phi \\ -s\theta & c\theta s\phi & c\theta c\phi 
@@ -150,10 +161,11 @@ here $c = cos$ and $s = sin$. This results in the following Euler angles, which 
     \theta & = -sin^{-1}(R_{31}) = -sin^{-1}(2(\epsilon_{1}\epsilon_{3}-\epsilon_{2}\eta)) \\
     \psi & = atan2(R_{21}, R_{11}) = atan2(2(\epsilon_{1}\epsilon_{2}+\epsilon_{3}\eta), 1 - 2(\epsilon_{2}^{2}+\epsilon_{3}^{2}))
 \end{align}
-$\phi$ and $\theta$ defines the rotation in surge and sway, respectively. In order to simplify the implementation of a controller based on Reinforcement Learning it is convenient to not include these two in the algorithm. The reason for this is that we are trying to accomplish Station Keeping, and the rotation in surge and sway is not as "important" as the rotation about the z-axis, $\psi$. To further simplify the problem we also neglect the position in $z$, as stated previously, since we are assuming a constant depth.\\\\
-Although these three states, $\phi$, $\theta$ and $z$, are not accounted for by the Reinforcement Learning algorithm, meaning that the algorithm do not produce thrust in these directions/orientations, their states will \textbf{affect} the algorithm. In order to resolve this I suggest to first implement a classical control algorithm, in order to make these three states stable on their own, before implementing the Reinforcement Learning algorithm on the resulting states. 
+$\phi$ and $\theta$ defines roll and pitch, respectively. In order to simplify the implementation of a controller based on Reinforcement Learning it is convenient to not include these two in the algorithm. The reason for this is that the overall goal is to accomplish Station Keeping, and these two states are not as "important" as the rotation about the z-axis, $\psi$. To further simplify the problem the position in $z$ is also neglected, since constant depth is assumed.\\\\
+Although these three states, $\phi$, $\theta$ and $z$, are not accounted for by the Reinforcement Learning algorithm, meaning that the algorithm do \textit{not} produce thrust input for these direction/orientations, their states will \textbf{affect} the behaviour of the vehicle. In order to resolve this a \textit{classical} control algorithm will first be implemented, to make these three states stable on their own. Then the Reinforcement Learning algorithm will be implemented for controlling the resulting states.
+
 \subsection{Implementation of PD algorithm}
-As mentioned in chapter \ref{chap:station-keeping} the PID algorithm is a common method for control, but in most cases only using a PD algorithm will be sufficient. In order to accomplish Station Keeping of the AUV the PD algorithm should adjust thrust in the $z$ direction as well as the $\phi$ and $\theta$ angles. The PD algorithm is thereby given by
+As mentioned in chapter \ref{chap:station-keeping}, the PID algorithm is a common method for control, but in most cases only using a PD algorithm will be sufficient. In order to accomplish Station Keeping of the AUV the PD algorithm should adjust thrust in the $z$ direction as well as the $\phi$ and $\theta$ rotations. The PD algorithm is thereby given by
 \begin{align}
     \tau & = K_{p}e(t) + K_{d}\frac{d(t)}{dt} \\
     \longrightarrow
@@ -169,7 +181,7 @@ As mentioned in chapter \ref{chap:station-keeping} the PID algorithm is a common
 \end{align}
 \subsection{Implementation of DDPG algorithm}
 As mentioned in chapter \ref{chap:station-keeping} the DDPG is a policy-gradient algorithm, which uses a stochastic behaviour policy for good exploration, but estimates a deterministic target policy, which is easy to learn. In order to implement this there will be used two \textbf{neural networks}, a \textit{control} neural network (actor) and an \textit{evaluation} neural network (critic), based on the experiments done by (Yu, Runsheng., et al.) \cite{Yu}.\\\\
-In order to define the neural networks we recall the equations of motion of underwater vehicles, defined in equation \ref{eq:motion}. By assuming the rotation in roll direction, $\phi$, and the rotation in pitch direction, $\theta$, small, the rotation matrix from (Body) to (NED) can be defined as
+In order to define the neural networks the equation of motions for underwater vehicles, defined in equation \ref{eq:motion}, is used. By assuming the roll rotation ($\phi$) and the pitch direction ($\theta$) small, the rotation matrix from (Body) to (NED) can be expressed as
 \begin{equation}
     \Re(\psi) = 
     \begin{pmatrix}
@@ -178,18 +190,18 @@ In order to define the neural networks we recall the equations of motion of unde
     0 & 0 & 1
     \end{pmatrix}
 \end{equation}
-Furthermore, by assuming the mass matrix, $M=M_{RB}+M_{A}$, not singular we have that equation \ref{eq:motion} modified as
+Furthermore, by assuming the mass matrix, $M=M_{RB}+M_{A}$, \textit{not singular}, equation \ref{eq:motion} can be modified as
 \begin{align}
     \Dot{v} & = M^{-1}(\tau-D(v)v-g(\eta)-C(v)v-\delta) \\
     \Re(\psi)v & = \Dot{\eta}
 \end{align}
-Applying the first-order Taylor expansion then gives us that
+Applying the first-order Taylor expansion then results in
 \begin{align}
     v(t+1) & = M^{-1}(\tau+G(t)) \\
     \eta(t+1) & = \Re(\psi(t))v(t) \\
     G(t) &= (-D(v(t))v-g(\eta(t))-C(v(t))v(t)-\omega)
 \end{align}
-where $\omega$ is noise from the environment and $t$ is a certain moment of the system. From this the controller, $\tau$, can be defined as a function of the position and velocity of the previous moment. This is given by
+where $\omega$ is noise from the environment, and $t$ is a certain moment of the system. From this the controller, $\tau$, can be defined as a function of the position and velocity of the previous moment. This is given by
 \begin{equation}
     \tau(t) = \mu(v(t), \eta(t))
 \end{equation}
@@ -199,19 +211,20 @@ which can be simplified as
     s_{t} & = [v(t),\eta(t)]^{T}
     \label{eq:tau}
 \end{align}
-The controller $\tau$ will apply a thrust matrix input to the system in a given state, which means that it can defined as an action, $a_{t}$, the ROV executes in a given state, $s_{t}$. Since the goal is to accomplish Station Keeping of the ROV at a desired state, ${s}_{d}$, this means that the actor function is designed to minimise the state error through minimising the reward function, given by
+The controller $\tau$ will apply a thrust matrix input to the system in a given state, which means that it can defined as an action ($a_{t}$) that the vehicle executes in a given state ($s_{t}$). Since the goal is to accomplish Station Keeping of the AUV at a desired state, ${s}_{d}$, this means that the actor function is designed to minimise the state error through minimising the reward function, given by
 \begin{equation}
     R(s_{t}, a_{t}) = \int_{t}^{\infty} \gamma^{-(k-t)}r(s_{t},a_{t})dk
 \end{equation}
-where $\gamma \in (0, 1)$ is the discount factor, which is used to reduce the influence from possible future states, defined in chapter \ref{chap: deep}. This means that we can describe the first problem as finding
+where $\gamma \in (0, 1)$ is the discount factor, which is used to reduce the influence from possible future states, defined in chapter \ref{chap: deep}. This means that an optimisation problem can be defined as
 \begin{align}
     & \argmin_{s_{t}, a_{t}} \{ R(s_{t}, a_{t})\} \\
     \text{s.t. } & a_{min} \leq a_{t} \leq a_{max} \\
     & s_{min} \leq s_{t} \leq s_{max}
+    \label{eq:argmin}
 \end{align}
-Here $a_{min}, a_{max}$ will be equal to the minimum and maximum thrust input from the controller, respectively. The \textbf{BlueROV2} has a maximum velocity of \textbf{2 [m/s]}, but in simulation this is set to half of this, resulting in $a_{min} = -1 [N]$ and $a_{max} = +1 [N]$.
+In equation \ref{eq:argmin} ($a_{min}, a_{max}$) will be equal to the minimum and maximum thrust input from the controller, respectively. The BlueROV2 has a maximum velocity of \textbf{2 [m/s]} \cite{blue}, but in simulation this is set to half of this, resulting in $a_{min} = -1 [N]$ and $a_{max} = +1 [N]$.
 \subsubsection{Critic function}
-To solve the \textbf{argmin} problem, the critic function is defined as
+To solve the \textbf{argmin} optimisation problem, the critic function is defined as
 \begin{align}
     Q(s_{t},a_{t}) = R(s_{t}, a_{t}) & = \int_{t}^{\infty} \gamma^{-(k-t)}r(s_{t},a_{t})dk \\
     \text{Discretize } \longrightarrow R(s_{t},a_{t}) & = \sum_{i=t}^{\infty} \gamma^{(i-t)}r(s_{t}, a_{t})
@@ -234,7 +247,7 @@ To evaluate the policy it is first necessary to find the optimal critic function
     Loss & = \frac{1}{2}(y_{t}-Q(s_{t},a_{t}|\omega))^{2} \\
     y_{t} & = r(s_{t}, a_{t})+\gamma Q(s_{t}, a_{t}|\omega)
 \end{align}
-By then using the policy gradient algorithm from (Silver, David., et al.) \cite{David} with a sampled bath from ($s_{t}, a_{t}$) the average \textbf{Loss} function and its gradient are given as
+By then using the policy gradient algorithm from (Silver, David., et al.) \cite{David} with a sampled bath from ($s_{t}, a_{t}$) the average \textbf{Loss} function, and its gradient, are given as
 \begin{align}
    \Bar{Loss} & = \frac{1}{N}\sum_{i=1}^{N}(y_{i}-Q(s_{i},a_{i}|\omega))^{2} \\
    \nabla_{\omega}\Bar{Loss} & = -\frac{2}{N}\sum_{i=1}^{N}(y_{i}-Q(s_{i},a_{i}|\omega))\frac{\partial Q(s_{i},a_{i}|\omega)}{\partial \omega}
@@ -261,22 +274,22 @@ In order to update the network \textit{ADAM} \cite{Kingma} is then used, which i
     \Hat{\Im}_{t} & = \frac{\Im_{t}}{1-\beta^{t}} \\
     \theta_{t+1} & = \theta_{t} - \eta\frac{1}{\sqrt{\Hat{\Im}_{t}}}\Hat{m}_{t}
 \end{align}
-Here, $\wp$ and $\beta$ is the learning rate.
+Here, $\wp$ and $\beta$ is the ADAM learning rate.
 \subsection{Controller Architecture}
-The proposed solution is to use a PD algorithm to control the states $z, \phi$ and $\theta$, in combination with a Reinforced Learning algorithm to control the states $x, y$ and $\psi$ for the BlueROV2. This results in the controller architecture visualised in figure \ref{fig:architecture}. 
+The proposed solution is to use a PD algorithm to control the states $z, \phi$ and $\theta$, in combination with a Reinforcement Learning algorithm (DDPG) to control the states $x, y$ and $\psi$ for the BlueROV2. This results in the controller architecture visualised in figure \ref{fig:architecture}. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth, trim={1cm 4cm 1cm 3cm},clip]{images/chap4/architecture.pdf}
     \caption{Controller Architecture for the BlueROV2}
     \label{fig:architecture}
 \end{figure}
-From the BlueRov2s' sensors the controller receives the positions and velocities in the given states. The PD algorithm will then receive the position states $z, \phi, \theta$ and the velocity states $\omega, p, q$ to calculate the needed force input in $z, \phi$ and $\theta$. At the same time-step the Reinforced Learning algorithm will receive the position states $x, y, \psi$ to calculate the needed force input in these states. This results in the force input matrix in the given state, $s_{t}$, being equal to
+From the BlueRov2s' sensors the controller receives the pose (position and orientation) and velocities in the given state. The PD algorithm will then receive the pose states $z, \phi, \theta$ and the velocity states $\omega, p, q$, to calculate the needed thrust input in $z, \phi$ and $\theta$. At the same time, the DDPG algorithm will receive the pose states $x, y, \psi$, to calculate the needed thrust input in these states. This results in the thrust input matrix in the given state, $s_{t}$, being equal to
 \begin{equation}
     \tau = \begin{bmatrix}
     \tau_{x} \\ \tau_{y} \\ \tau_{z} \\ \tau_{\phi} \\ \tau_{\theta} \\ \tau_{\psi}
     \end{bmatrix}
 \end{equation}
-The Reinforced Learning algorithm is displayed in Algorithm \ref{alg:RF}. As shown in the algorithm it clips the action, $a_{t}$, based on $a_{t} \in [-1 , 1]$ and a factor $\epsilon$. $\epsilon$ is here the exploitation versus exploration factor, discussed in chapter \ref{chap:station-keeping}. Both networks also need to be discounted by a \textit{learning rate} $\alpha$, which says something about how much the algorithm values new information in a given state versus the learned optimal actions in that state. The learning rate should also be decreased over the number of iterations, since the algorithm gains larger and lager knowledge about the environment.\\
+The DDPG algorithm is displayed in Algorithm \ref{alg:RF}. As shown in the algorithm, it clips the action ($a_{t}$) based on the constraint $a_{t} \in [-1 , 1]$ and a factor $\epsilon$. $\epsilon$ is here the exploitation versus exploration factor, discussed in chapter \ref{chap:station-keeping}. Both networks also need to be discounted by a \textit{learning rate} $\alpha$, which says something about how much the algorithm values new information in a given state versus the learned optimal actions in that state. The learning rate should also be decreased over the number of iterations, since the algorithm gains larger and lager knowledge about the environment.\\
 \begin{algorithm}[H]
 \SetAlgoLined
     Initialise the network classes $Q(s_{t},a_{t}|\omega)$ and $\mu(s_{t}|\omega)$ with weights $\omega$ and $\theta$.\\
@@ -320,7 +333,7 @@ The Reinforced Learning algorithm is displayed in Algorithm \ref{alg:RF}. As sho
 \end{algorithm}
 
 \subsection{Reward function}
-Optimal design of the reward function, $r(s_{t},a_{t})$, is essential for the behaviour of the algorithm. As mentioned throughout this paper, the reward is a feedback from the environment based on how good it was to take a particular action in a given state. The agent is continuously looking for the highest total cumulative reward, in order to determine the optimal policy starting in any state. Because of this, different reward function designs have been tested, more about this in the next chapter. 
+Optimal design of the reward function, $r(s_{t},a_{t})$, in algorithm \ref{alg:RF} is essential for the behaviour of the algorithm. As mentioned throughout this paper, the reward is a feedback from the environment, based on how good it was to take a particular action in a given state. The agent is continuously looking for the highest total cumulative reward, in order to determine the optimal policy starting in any state. Because of this, different reward function designs have been tested, more about this in the next chapter. 
 \section{Software}
 In order to evaluate the controller design the simulators \textbf{Gazebo} and \textbf{Robotic Operating System} (ROS) were used. Gazebo, which offers the ability to accurately and efficiently simulate a robotic system in complex environments, was used to simulate the \textit{MC Lab} at \textit{Marin Teknisk Senter} in Trondheim, Norway. ROS was used to simulate the dynamics of the \textbf{BlueROV2}, and combining these two resulted in the simulator in figure \ref{fig:ros}. 
 \begin{figure}[H]
