@@ -18,7 +18,7 @@ In figure \ref{fig:reference_frame} the BlueROV2s' 6 degrees of freedom (DOFs) i
     \item \textit{NED} is defined as a coordinate system $\{n\} = (x_{n},y_{n},z_{n})$ with origin $o_{n}$ relative to the Earth's reference ellipsoid, commonly defined as the tangent plane to the surface of the Earth moving with the vessel \cite{Fossen}. Here, the $x_{n}$ axis points towards true North, the $y_{n}$ axis points towards the true East and the $z_{n}$ axis points downwards normal to the surface. 
     \item \textit{Body} is defined as a coordinate system $\{b\} = (x_{b},y_{b},z_{b})$ with origin $o_{b}$ centred at the vessels centre of mass, and moving with the body. Here, the $x_{b}$ axis is directed from aft to fore, the $y_{b}$ transverse axis is directed towards starboard and the $z_{b}$ normal axis directed from top to bottom. 
 \end{itemize}
-The notations in figure \ref{fig:reference_frame} are defined according to SNAME (1950) \cite{Fossen}, which is given in figure \ref{fig:sname}. The SNAME notation will be used throughout this paper. 
+The notations in figure \ref{fig:reference_frame} are defined according to SNAME (1950) \cite{Fossen}, which is given in figure \ref{fig:sname}. The SNAME notation will be used throughout this report. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{images/chap4/SNAME.png}
@@ -333,7 +333,7 @@ The DDPG algorithm is displayed in Algorithm \ref{alg:RF}. As shown in the algor
 \end{algorithm}
 
 \subsection{Reward function}
-Optimal design of the reward function, $r(s_{t},a_{t})$, in algorithm \ref{alg:RF} is essential for the behaviour of the algorithm. As mentioned throughout this paper, the reward is a feedback from the environment, based on how good it was to take a particular action in a given state. The agent is continuously looking for the highest total cumulative reward, in order to determine the optimal policy starting in any state. Because of this, different reward function designs have been tested, more about this in the next chapter. 
+Optimal design of the reward function, $r(s_{t},a_{t})$, in algorithm \ref{alg:RF} is essential for the behaviour of the algorithm. As mentioned throughout this report, the reward is a feedback from the environment, based on how good it was to take a particular action in a given state. The agent is continuously looking for the highest total cumulative reward, in order to determine the optimal policy starting in any state. Because of this, different reward function designs have been tested, more about this in the next chapter. 
 \section{Software}
 In order to evaluate the controller design the simulators \textbf{Gazebo} and \textbf{Robotic Operating System} (ROS) were used. Gazebo, which offers the ability to accurately and efficiently simulate a robotic system in complex environments, was used to simulate the \textit{MC Lab} at \textit{Marin Teknisk Senter} in Trondheim, Norway. ROS was used to simulate the dynamics of the \textbf{BlueROV2}, and combining these two resulted in the simulator in figure \ref{fig:ros}. 
 \begin{figure}[H]
@@ -342,4 +342,4 @@ In order to evaluate the controller design the simulators \textbf{Gazebo} and \t
     \caption{Gazebo and Robotic Operating System (ROS) with the BlueROV2 AUV}
     \label{fig:ros}
 \end{figure}
-For the implementation of the controller design, both the DP algorithm and the DDPG algorithm, the programming framework \textbf{TensorFlow} was chosen. TensorFlow is an open-source machine learning framework, which works well in combination with the \textbf{Python} programming language. 
+For the implementation of the controller design, both the DP algorithm and the DDPG algorithm, the programming framework \textit{TensorFlow} was chosen. TensorFlow is an open-source machine learning framework, which works well in combination with the \textit{Python} programming language. 
